@@ -34,7 +34,6 @@
                   (max (car l) (cadr l))
                   )
               (loop (add1 count) (cddr l))))))
-(min-max-map '(1 3 5 2 4 8 2 2))
 
 (module+ test
   (check-equal? (min-max-game '(1 3 5 2 4 8 2 2))
