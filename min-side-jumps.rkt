@@ -17,27 +17,29 @@
     (define (find-obstacle track)
       (index-of remain-lst track)
       )
-    (define (target-track remain)
-      (define-values (x y) (apply values (remove track tracks)))
-      (cond
-        [(equal? (car remain) x) y]
-        [(equal? (car remain) y) x]
-        [else (let ([x-idx (index-of remain x)])
-                (if (not x-idx)
-                    x
-                    (let ([y-idx (index-of remain y)])
-                      (if (not y-idx)
-                          y
-                          (if (> x-idx y-idx)
-                              x
-                              y)))))]))
     (cond
       [(null? remain-lst) jump-count]
       [else (let ([obstacle-pos (find-obstacle track)])
               (if (not obstacle-pos)
                   jump-count
                   (let ([remain (drop remain-lst (sub1 obstacle-pos))])
-                    (let ([t (target-track remain)])
+                    (define (target-track)
+                      (define-values (x y) (apply values (remove track tracks)))
+                      (cond
+                        [(equal? (car remain) x) y]
+                        [(equal? (car remain) y) x]
+                        [else (let ([x-idx (index-of remain x)])
+                                (if (not x-idx)
+                                    (begin (set! remain null)
+                                           x)
+                                    (let ([y-idx (index-of remain y)])
+                                      (if (not y-idx)
+                                          (begin (set! remain null)
+                                                 y)
+                                          (if (> x-idx y-idx)
+                                              x
+                                              y)))))]))
+                    (let ([t (target-track)])
                       (loop t remain (add1 jump-count))))
                   )
               )]))
