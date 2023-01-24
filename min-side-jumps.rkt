@@ -9,37 +9,43 @@
 
 (define/contract (min-side-jumps obstacles)
   (-> (listof exact-integer?) exact-integer?)
-  (define len (length obstacles))
+  (define tracks '(1 2 3))
   (let loop ([track 2]
-             [pos 0]
-             [jump-count 0])
-    (define (no-obstacles-in-track-future?)
-      (not (member track obstacles))
+             [remain-lst obstacles]
+             [jump-count 0]
+             )
+    (define (find-obstacle track)
+      (index-of remain-lst track)
       )
-    (define (obstacle-next?)
-      (= track (list-ref obstacles (add1 pos)))
-      )
-    (define (proper-track)
-      (let ([remain (drop obstacles pos)])
-        (car
-         (argmin cdr
-                 (map (lambda (t) (cons t
-                                        (let ([remain-lst (member t remain)]
-                                              )
-                                          (if remain-lst
-                                              (length remain-lst)
-                                              0)
-                                          ))) '(1 2 3))))))
+    (define (target-track remain)
+      (define-values (x y) (apply values (remove track tracks)))
+      (cond
+        [(equal? (car remain) x) y]
+        [(equal? (car remain) y) x]
+        [else (let ([x-idx (index-of remain x)])
+                (if (not x-idx)
+                    x
+                    (let ([y-idx (index-of remain y)])
+                      (if (not y-idx)
+                          y
+                          (if (> x-idx y-idx)
+                              x
+                              y)))))]))
     (cond
-      [(= pos (sub1 len)) jump-count]
-      [(no-obstacles-in-track-future?) jump-count]
-      [(obstacle-next?) (loop (proper-track) pos (add1 jump-count))]
-      [else (loop track (add1 pos) jump-count)]
-      )
-    ))
+      [(null? remain-lst) jump-count]
+      [else (let ([obstacle-pos (find-obstacle track)])
+              (if (not obstacle-pos)
+                  jump-count
+                  (let ([remain (drop remain-lst (sub1 obstacle-pos))])
+                    (let ([t (target-track remain)])
+                      (loop t remain (add1 jump-count))))
+                  )
+              )]))
+  )
 
 (module+ test
   (check-equal? (min-side-jumps '(0 1 2 3 0)) 2)
   (check-equal? (min-side-jumps '(0 1 1 3 3 0)) 0)
   (check-equal? (min-side-jumps '(0 2 1 0 3 0)) 2)
+  (check-equal? (min-side-jumps '(0 0 3 1 0 1 0 2 3 1 0)) 2)
   )
